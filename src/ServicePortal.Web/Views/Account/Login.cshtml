@@ -1,0 +1,29 @@
+@model LoginModel
+@{ ViewData["Title"] = "Sign in"; }
+<div class="narrow">
+    <h1>Sign in</h1>
+    <form asp-action="Login" method="post" class="form">
+        <div asp-validation-summary="ModelOnly" class="alert alert-error" role="alert"></div>
+        <input type="hidden" asp-for="ReturnUrl" />
+        <label asp-for="UserName"></label>
+        <input asp-for="UserName" autocomplete="username" autofocus />
+        <span asp-validation-for="UserName" class="field-error"></span>
+        <label asp-for="Password"></label>
+        <input asp-for="Password" autocomplete="current-password" />
+        <span asp-validation-for="Password" class="field-error"></span>
+        <button type="submit" class="btn btn-primary">Sign in</button>
+    </form>
+    <p>New resident? <a asp-action="Register">Create an account</a></p>
+    <details class="demo-accounts">
+        <summary>Demo accounts</summary>
+        <p>Password for all demo accounts: <code>Demo!Pass2026</code></p>
+        <ul>
+            <li><code>admin</code> – application administrator</li>
+            <li><code>clerk</code> – customer service clerk (triage, phone intake)</li>
+            <li><code>sup.roads</code> – Roads Operations supervisor (sees Roads only)</li>
+            <li><code>sup.transport</code> – Transportation director (sees Roads + Traffic)</li>
+            <li><code>sup.waste</code>, <code>sup.building</code> – other departments</li>
+            <li><code>resident@@example.com</code> – resident</li>
+        </ul>
+    </details>
+</div>

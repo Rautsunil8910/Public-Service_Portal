@@ -1,0 +1,59 @@
+@model UsersViewModel
+@{ ViewData["Title"] = "Users & passwords"; var f = Model.Form; }
+<h1>Staff users &amp; passwords</h1>
+<div class="grid-2 wide-left">
+    <section class="panel">
+        <table class="table">
+            <thead><tr><th>User</th><th>Role</th><th>Department</th><th>Status</th><th>Last sign-in</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var u in Model.Users)
+            {
+                <tr class="@(u.IsActive ? "" : "row-muted")">
+                    <td>@u.DisplayName<br /><small class="muted">@u.UserName</small></td>
+                    <td>@u.RoleName</td>
+                    <td>@u.DepartmentName</td>
+                    <td>@(u.IsActive ? "Active" : "Disabled") @if (u.IsLocked) { <span class="badge-alert">Locked</span> }</td>
+                    <td>@u.LastLoginUtc.Local()</td>
+                    <td>
+                        <a asp-action="Users" asp-route-edit="@u.UserId">Edit</a>
+                        @if (u.IsLocked)
+                        {
+                            <form asp-action="Unlock" method="post" class="inline">
+                                <input type="hidden" name="userId" value="@u.UserId" />
+                                <button class="btn btn-link" type="submit">Unlock</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </section>
+    <section class="panel">
+        <h2>@(f.UserId is null ? "Add staff user" : $"Edit {f.UserName}")</h2>
+        <form asp-action="SaveUser" method="post" class="form">
+            <div asp-validation-summary="All" class="alert alert-error" role="alert"></div>
+            <input type="hidden" asp-for="Form.UserId" />
+            <label asp-for="Form.UserName"></label><input asp-for="Form.UserName" />
+            <label asp-for="Form.DisplayName"></label><input asp-for="Form.DisplayName" />
+            <label asp-for="Form.RoleCode"></label>
+            <select asp-for="Form.RoleCode">
+                <option value="CLERK">Customer Service Clerk</option>
+                <option value="SUPERVISOR">Department Supervisor</option>
+                <option value="ADMIN">Application Administrator</option>
+            </select>
+            <label asp-for="Form.DepartmentId"></label>
+            <select asp-for="Form.DepartmentId">
+                <option value="">(none)</option>
+                @foreach (var d in Model.Departments) { <option value="@d.DepartmentId">@(new string(' ', d.OrgLevel * 2))@d.Name</option> }
+            </select>
+            <p class="hint">Supervisors see requests for their department and every unit below it.</p>
+            <label class="check"><input asp-for="Form.IsActive" /> Active</label>
+            <label asp-for="Form.NewPassword"></label>
+            <input asp-for="Form.NewPassword" autocomplete="new-password" />
+            <p class="hint">@(f.UserId is null ? "Required." : "Leave blank to keep the current password. Setting one also unlocks the account.")</p>
+            <button type="submit" class="btn btn-primary">Save</button>
+            @if (f.UserId is not null) { <a asp-action="Users">Cancel</a> }
+        </form>
+    </section>
+</div>

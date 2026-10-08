@@ -1,0 +1,19 @@
+@model List<AccessAuditRow>
+@{ ViewData["Title"] = "Privacy audit"; }
+<h1>Personal information access log</h1>
+<p class="muted">Every reveal of a resident's unmasked contact details, with the stated purpose (MFIPPA accountability).</p>
+<form method="get" class="filters">
+    <label>Resident ID <input type="number" name="residentId" value="@ViewBag.ResidentId" /></label>
+    <button class="btn" type="submit">Filter</button>
+</form>
+<table class="table">
+    <thead><tr><th>When</th><th>Staff member</th><th>Role</th><th>Resident</th><th>Purpose</th><th>Workstation</th></tr></thead>
+    <tbody>
+    @foreach (var a in Model)
+    {
+        <tr><td>@a.AccessedAtUtc.Local()</td><td>@a.DisplayName <small class="muted">@a.UserName</small></td><td>@a.RoleCode</td>
+            <td><a asp-action="Audit" asp-route-residentId="@a.ResidentId">#@a.ResidentId</a></td><td>@a.Purpose</td><td>@a.HostName</td></tr>
+    }
+    </tbody>
+</table>
+@if (Model.Count == 0) { <p class="empty">No access recorded.</p> }

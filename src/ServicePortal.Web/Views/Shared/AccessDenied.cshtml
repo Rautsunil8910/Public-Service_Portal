@@ -1,0 +1,5 @@
+@{ ViewData["Title"] = "Access denied"; }
+<h1>Access denied</h1>
+<p>Your role doesn't include this screen. If you need it for your work, ask your supervisor to request access from the application administrator.</p>
+@if (ViewData["Message"] is string m) { <p class="muted">@m</p> }
+<p><a asp-controller="Home" asp-action="Index">Return to the home page</a></p>

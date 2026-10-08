@@ -1,0 +1,77 @@
+@model PermitListViewModel
+@{
+    ViewData["Title"] = "Permits";
+    Func<int, string> pageUrl = p => Url.Action("Index", new { status = Model.Status, page = p })!;
+    var canDecide = User.IsInRole("SUPERVISOR") || User.IsInRole("ADMIN");
+}
+<div class="page-head">
+    <h1>@(Model.IsReviewer ? "Permit review queue" : "My permit applications")</h1>
+    @if (User.CanSee(Screens.PermitSubmit)) { <a class="btn btn-primary" asp-action="New">Apply for a permit</a> }
+</div>
+@if (Model.IsReviewer)
+{
+    <form method="get" class="filters">
+        <label>Status
+            <select name="status">
+                <option value="">All</option>
+                @foreach (var s in new[] { "SUBMITTED", "UNDER_REVIEW", "APPROVED", "REJECTED" })
+                {
+                    <option value="@s" selected="@(Model.Status == s)">@s.Replace('_', ' ')</option>
+                }
+            </select>
+        </label>
+        <button class="btn" type="submit">Apply</button>
+    </form>
+}
+@if (Model.Rows.Count == 0)
+{
+    <p class="empty">No permit applications.</p>
+}
+else
+{
+    <table class="table">
+        <thead><tr><th>Permit</th><th>Type</th><th>Property</th>@if (Model.IsReviewer) { <th>Applicant</th> }<th class="num">Value</th><th class="num">Fee</th><th>Status</th><th>Submitted</th>@if (Model.IsReviewer) { <th>Action</th> }</tr></thead>
+        <tbody>
+        @foreach (var p in Model.Rows)
+        {
+            <tr>
+                <td>@p.PermitNumber</td>
+                <td>@p.PermitType<br /><small class="muted">@p.WorkDescription</small></td>
+                <td>@p.PropertyAddress</td>
+                @if (Model.IsReviewer) { <td>@p.Applicant</td> }
+                <td class="num">@p.ProjectValue.ToString("C0")</td>
+                <td class="num">@p.Fee.ToString("C")</td>
+                <td><span class="@Display.StatusCss(p.StatusCode)">@p.StatusCode.Replace('_', ' ')</span>
+                    @if (p.DecisionNote is not null) { <br /><small class="muted">@p.DecisionNote</small> }</td>
+                <td>@p.SubmittedAtUtc.Local()</td>
+                @if (Model.IsReviewer)
+                {
+                    <td>
+                        @if (p.StatusCode == "SUBMITTED")
+                        {
+                            <form asp-action="Decide" method="post" class="inline">
+                                <input type="hidden" name="PermitId" value="@p.PermitId" />
+                                <input type="hidden" name="RowVersion" value="@Convert.ToBase64String(p.RowVer)" />
+                                <input type="hidden" name="status" value="@Model.Status" />
+                                <button class="btn btn-small" name="Decision" value="UNDER_REVIEW">Start review</button>
+                            </form>
+                        }
+                        else if (p.StatusCode == "UNDER_REVIEW" && canDecide)
+                        {
+                            <form asp-action="Decide" method="post" class="inline decide">
+                                <input type="hidden" name="PermitId" value="@p.PermitId" />
+                                <input type="hidden" name="RowVersion" value="@Convert.ToBase64String(p.RowVer)" />
+                                <input type="hidden" name="status" value="@Model.Status" />
+                                <input name="Note" placeholder="Note (required to reject)" maxlength="500" />
+                                <button class="btn btn-small" name="Decision" value="APPROVED">Approve</button>
+                                <button class="btn btn-small btn-danger" name="Decision" value="REJECTED">Reject</button>
+                            </form>
+                        }
+                    </td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
+    <partial name="_Pager" model="(Model.Page, Model.TotalPages, pageUrl)" />
+}

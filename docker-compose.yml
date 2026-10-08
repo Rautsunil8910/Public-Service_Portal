@@ -1,0 +1,69 @@
+# One command brings up the whole stack:  docker compose up --build
+#   sql      SQL Server 2022 Developer Edition (+ SQL Agent for backup jobs)
+#   db-init  deploys schema, security, procedures, logins, seed data and Agent jobs, then exits
+#   erp      mock Finance/ERP service (XML API)
+#   web      ASP.NET Core portal  -> http://localhost:5000
+# Passwords below are LOCAL DEMO defaults; override them in a .env file (see .env.example).
+name: public-service-portal
+
+x-sql-image: &sql-image mcr.microsoft.com/mssql/server:2022-latest
+
+services:
+  sql:
+    image: *sql-image
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_AGENT_ENABLED: "true"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-Local!SqlPassw0rd}
+    ports: ["1433:1433"]
+    volumes: [sqldata:/var/opt/mssql]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  db-init:
+    image: *sql-image
+    depends_on:
+      sql: { condition: service_healthy }
+    volumes: ["./database:/database:ro"]
+    entrypoint: ["/bin/bash", "/database/deploy.sh"]
+    environment:
+      SQL_SERVER: sql
+      SQL_PASSWORD: ${SA_PASSWORD:-Local!SqlPassw0rd}
+      DB_NAME: PublicServicePortal
+      SQLCMD: /opt/mssql-tools18/bin/sqlcmd
+      SQLCMD_EXTRA: "-C"
+      APP_PASSWORD: ${APP_PASSWORD:-App!Passw0rd2026}
+      INTEG_PASSWORD: ${INTEG_PASSWORD:-Integ!Passw0rd2026}
+      RPT_PASSWORD: ${RPT_PASSWORD:-Rpt!Passw0rd2026}
+      SEED_ROWS: ${SEED_ROWS:-100000}
+      INSTALL_AGENT_JOBS: "true"
+      BACKUP_DIR: /var/opt/mssql/data
+    restart: "no"
+
+  erp:
+    build: { context: ., dockerfile: src/MockErp.Api/Dockerfile }
+    environment:
+      Erp__ApiKey: ${ERP_API_KEY:-dev-erp-key-change-me}
+      Erp__SimulatedFailureRate: "0.10"
+    ports: ["5080:8080"]
+
+  web:
+    build: { context: ., dockerfile: src/ServicePortal.Web/Dockerfile }
+    depends_on:
+      db-init: { condition: service_completed_successfully }
+      erp: { condition: service_started }
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development      # enables demo accounts; use Production for anything real
+      ConnectionStrings__Portal: "Server=sql;Database=PublicServicePortal;User Id=portal_app;Password=${APP_PASSWORD:-App!Passw0rd2026};TrustServerCertificate=True;Application Name=PublicServicePortal.Web"
+      ConnectionStrings__Integration: "Server=sql;Database=PublicServicePortal;User Id=portal_integration;Password=${INTEG_PASSWORD:-Integ!Passw0rd2026};TrustServerCertificate=True;Application Name=PublicServicePortal.Integration"
+      Erp__BaseUrl: http://erp:8080
+      Erp__ApiKey: ${ERP_API_KEY:-dev-erp-key-change-me}
+    ports: ["5000:8080"]
+
+volumes:
+  sqldata:

@@ -1,0 +1,37 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServicePortal.Shared", "src\ServicePortal.Shared\ServicePortal.Shared.csproj", "{EA966FE1-4349-5092-B6D2-F26312E83CE3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServicePortal.Web", "src\ServicePortal.Web\ServicePortal.Web.csproj", "{266DE66D-4F57-57D5-AC9B-382CF954DBEB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MockErp.Api", "src\MockErp.Api\MockErp.Api.csproj", "{F2520C64-00A4-554C-9567-E45746A88D48}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServicePortal.Tests", "tests\ServicePortal.Tests\ServicePortal.Tests.csproj", "{FCDD330F-E0A5-5CDD-BD5A-89054D2C198D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EA966FE1-4349-5092-B6D2-F26312E83CE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA966FE1-4349-5092-B6D2-F26312E83CE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA966FE1-4349-5092-B6D2-F26312E83CE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA966FE1-4349-5092-B6D2-F26312E83CE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{266DE66D-4F57-57D5-AC9B-382CF954DBEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{266DE66D-4F57-57D5-AC9B-382CF954DBEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{266DE66D-4F57-57D5-AC9B-382CF954DBEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{266DE66D-4F57-57D5-AC9B-382CF954DBEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2520C64-00A4-554C-9567-E45746A88D48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2520C64-00A4-554C-9567-E45746A88D48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2520C64-00A4-554C-9567-E45746A88D48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2520C64-00A4-554C-9567-E45746A88D48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCDD330F-E0A5-5CDD-BD5A-89054D2C198D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCDD330F-E0A5-5CDD-BD5A-89054D2C198D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCDD330F-E0A5-5CDD-BD5A-89054D2C198D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCDD330F-E0A5-5CDD-BD5A-89054D2C198D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

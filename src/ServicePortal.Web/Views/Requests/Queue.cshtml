@@ -1,0 +1,37 @@
+@model QueueViewModel
+@{
+    ViewData["Title"] = "Request queue";
+    var f = Model.Filter;
+    Func<int, string> pageUrl = p => Url.Action("Queue", new { f.Status, f.DepartmentId, f.MunicipalityId, f.Search, f.OverdueOnly, page = p })!;
+}
+<div class="page-head">
+    <h1>Request queue</h1>
+    @if (User.CanSee(Screens.RequestSubmit)) { <a class="btn btn-primary" asp-action="New">New request (phone/counter)</a> }
+</div>
+<form method="get" asp-action="Queue" class="filters">
+    <label>Status
+        <select name="status">
+            <option value="OPEN" selected="@(f.Status == "OPEN")">All open</option>
+            <option value="" selected="@(f.Status is null)">All</option>
+            @foreach (var s in Model.Statuses) { <option value="@s.StatusCode" selected="@(f.Status == s.StatusCode)">@s.DisplayName</option> }
+        </select>
+    </label>
+    <label>Department
+        <select name="departmentId">
+            <option value="">All I can see</option>
+            @foreach (var d in Model.Departments) { <option value="@d.DepartmentId" selected="@(f.DepartmentId == d.DepartmentId)">@(new string(' ', d.OrgLevel * 2))@d.Name</option> }
+        </select>
+    </label>
+    <label>Municipality
+        <select name="municipalityId">
+            <option value="">All</option>
+            @foreach (var m in Model.Municipalities) { <option value="@m.MunicipalityId" selected="@(f.MunicipalityId == m.MunicipalityId)">@m.Name</option> }
+        </select>
+    </label>
+    <label>Search <input type="search" name="search" value="@f.Search" placeholder="SR-0001234 or street" /></label>
+    <label class="check"><input type="checkbox" name="overdueOnly" value="true" checked="@f.OverdueOnly" /> Overdue only</label>
+    <button type="submit" class="btn">Apply</button>
+</form>
+<p class="muted">@Model.TotalRows.ToString("N0") request(s). Overdue items are listed first, then by priority and target date.</p>
+<partial name="_RequestTable" model="Model.Rows" />
+<partial name="_Pager" model="(f.Page, Model.TotalPages, pageUrl)" />

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"] is string t ? t + " – " : "")Public Service Portal</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="topbar">
+        <a class="brand" asp-controller="Home" asp-action="Index">
+            <span class="brand-mark" aria-hidden="true">SP</span>
+            <span>Service Portal <small>Public services demo</small></span>
+        </a>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <nav aria-label="Main">
+                @if (User.CanSee(Screens.Dashboard)) { <a asp-controller="Dashboard" asp-action="Index">Dashboard</a> }
+                @if (User.CanSee(Screens.RequestQueue)) { <a asp-controller="Requests" asp-action="Queue">Request queue</a> }
+                @if (User.CanSee(Screens.RequestMy)) { <a asp-controller="Requests" asp-action="Mine">My requests</a> }
+                @if (User.CanSee(Screens.RequestSubmit)) { <a asp-controller="Requests" asp-action="New">Report a problem</a> }
+                @if (User.CanSee(Screens.PermitSubmit) || User.CanSee(Screens.PermitQueue)) { <a asp-controller="Permits" asp-action="Index">Permits</a> }
+                @if (User.CanSee(Screens.Reports)) { <a asp-controller="Reports" asp-action="Index">Reports</a> }
+                @if (User.CanSee(Screens.AdminUsers) || User.CanSee(Screens.AdminAudit) || User.CanSee(Screens.AdminErrors) || User.CanSee(Screens.AdminIntegration))
+                {
+                    <details class="menu">
+                        <summary>Admin</summary>
+                        <div class="menu-items">
+                            @if (User.CanSee(Screens.AdminUsers)) { <a asp-controller="Admin" asp-action="Users">Users &amp; passwords</a> }
+                            @if (User.CanSee(Screens.AdminScreens)) { <a asp-controller="Admin" asp-action="Screens">Screen permissions</a> }
+                            @if (User.CanSee(Screens.AdminAudit)) { <a asp-controller="Admin" asp-action="Audit">Privacy audit</a> }
+                            @if (User.CanSee(Screens.AdminErrors)) { <a asp-controller="Admin" asp-action="Errors">Error log</a> }
+                            @if (User.CanSee(Screens.AdminIntegration)) { <a asp-controller="Admin" asp-action="Integration">ERP integration</a> }
+                        </div>
+                    </details>
+                }
+            </nav>
+            <form class="signout" asp-controller="Account" asp-action="Logout" method="post">
+                <span class="who">@User.DisplayName() <span class="role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value)</span></span>
+                <button type="submit" class="btn btn-link">Sign out</button>
+            </form>
+        }
+        else
+        {
+            <nav aria-label="Account">
+                <a asp-controller="Account" asp-action="Login">Sign in</a>
+                <a asp-controller="Account" asp-action="Register">Create account</a>
+            </nav>
+        }
+    </header>
+    <main id="main" class="container">
+        <partial name="_Messages" />
+        @RenderBody()
+    </main>
+    <footer class="footer container">
+        Portfolio demonstration project – not an official government system. All data is fictitious.
+    </footer>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

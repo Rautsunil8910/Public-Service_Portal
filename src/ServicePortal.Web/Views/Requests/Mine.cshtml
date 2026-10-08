@@ -1,0 +1,11 @@
+@model QueueViewModel
+@{
+    ViewData["Title"] = "My requests";
+    Func<int, string> pageUrl = p => Url.Action("Mine", new { page = p })!;
+}
+<div class="page-head">
+    <h1>My requests</h1>
+    <a class="btn btn-primary" asp-action="New">Report a problem</a>
+</div>
+<partial name="_RequestTable" model="Model.Rows" />
+<partial name="_Pager" model="(Model.Filter.Page, Model.TotalPages, pageUrl)" />

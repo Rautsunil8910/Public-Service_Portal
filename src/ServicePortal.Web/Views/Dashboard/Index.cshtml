@@ -1,0 +1,43 @@
+@model DashboardViewModel
+@{ ViewData["Title"] = "Dashboard"; var maxDept = Math.Max(1, Model.ByDepartment.Select(d => d.OpenCount).DefaultIfEmpty(0).Max()); }
+<h1>Dashboard</h1>
+<p class="muted">Figures are limited to the requests your role can see.</p>
+<section class="kpis">
+    <a class="kpi" asp-controller="Requests" asp-action="Queue" asp-route-status="OPEN"><span class="kpi-value">@Model.Kpis.OpenCount.ToString("N0")</span><span class="kpi-label">Open requests</span></a>
+    <a class="kpi kpi-alert" asp-controller="Requests" asp-action="Queue" asp-route-status="OPEN" asp-route-overdueOnly="true"><span class="kpi-value">@Model.Kpis.OverdueCount.ToString("N0")</span><span class="kpi-label">Past target date</span></a>
+    <div class="kpi"><span class="kpi-value">@Model.Kpis.SubmittedLast7Days.ToString("N0")</span><span class="kpi-label">Received, last 7 days</span></div>
+    <div class="kpi"><span class="kpi-value">@Model.Kpis.ClosedLast7Days.ToString("N0")</span><span class="kpi-label">Closed, last 7 days</span></div>
+    <div class="kpi"><span class="kpi-value">@(Model.Kpis.SlaCompliancePct90Days?.ToString("0.0") ?? "–")%</span><span class="kpi-label">On time, last 90 days</span></div>
+</section>
+<div class="grid-2">
+    <section class="panel">
+        <h2>Open work by department</h2>
+        <table class="table">
+            <thead><tr><th>Department</th><th class="num">Open</th><th class="num">Overdue</th><th class="sr-only">Load</th></tr></thead>
+            <tbody>
+            @foreach (var d in Model.ByDepartment)
+            {
+                <tr>
+                    <td>@d.Department</td>
+                    <td class="num">@d.OpenCount.ToString("N0")</td>
+                    <td class="num @(d.OverdueCount > 0 ? "text-alert" : "")">@d.OverdueCount.ToString("N0")</td>
+                    <td><progress max="@maxDept" value="@d.OpenCount" aria-label="@d.Department open requests"></progress></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </section>
+    <section class="panel">
+        <h2>Open work by status</h2>
+        <ul class="status-list">
+            @foreach (var s in Model.ByStatus)
+            {
+                <li><a asp-controller="Requests" asp-action="Queue" asp-route-status="@s.StatusCode"><span class="@Display.StatusCss(s.StatusCode)">@s.DisplayName</span> <strong>@s.RequestCount.ToString("N0")</strong></a></li>
+            }
+        </ul>
+        <h2>Most reported, last 30 days</h2>
+        <ol>
+            @foreach (var c in Model.TopCategories) { <li>@c.Category – @c.RequestCount.ToString("N0")</li> }
+        </ol>
+    </section>
+</div>

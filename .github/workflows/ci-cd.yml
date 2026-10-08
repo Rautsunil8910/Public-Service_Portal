@@ -1,0 +1,106 @@
+# CI/CD with environment promotion (JD duty 4).
+#   build-test   : every push / PR - build, unit tests, deploy DB to a throwaway SQL Server, run DB tests
+#   deploy-test  : main branch      - deploy to the Test environment automatically
+#   deploy-prod  : after Test       - deploy to Production, gated by a required reviewer
+# Set up: repository variable DEPLOY_ENABLED=true, GitHub environments "test" and "production"
+# (add a required reviewer on "production"), and these secrets in each environment:
+#   SQL_SERVER, SQL_USER, SQL_PASSWORD, APP_PASSWORD, INTEG_PASSWORD, RPT_PASSWORD
+name: ci-cd
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  SQL_IMAGE: mcr.microsoft.com/mssql/server:2022-latest
+  CI_SA_PASSWORD: Ci!Passw0rd-${{ github.run_id }}
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      sql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_PID: Developer
+          MSSQL_SA_PASSWORD: Ci!Passw0rd-${{ github.run_id }}
+        ports: ["1433:1433"]
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" -b -o /dev/null"
+          --health-interval 10s --health-timeout 5s --health-retries 20 --health-start-period 20s
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build
+        run: dotnet build PublicServicePortal.sln -c Release
+
+      - name: Unit tests
+        run: dotnet test PublicServicePortal.sln -c Release --no-build --logger "trx;LogFileName=unit.trx"
+
+      - name: Deploy database to CI SQL Server (migrations, procedures, logins, 5k seed rows)
+        run: |
+          docker run --rm --network host -v "$PWD/database:/database:ro" \
+            -e SQL_SERVER=localhost,1433 -e SQL_PASSWORD="$CI_SA_PASSWORD" -e DB_NAME=PublicServicePortal \
+            -e SQLCMD=/opt/mssql-tools18/bin/sqlcmd -e SQLCMD_EXTRA=-C \
+            -e APP_PASSWORD="App!Ci-${{ github.run_id }}" -e INTEG_PASSWORD="Integ!Ci-${{ github.run_id }}" -e RPT_PASSWORD="Rpt!Ci-${{ github.run_id }}" \
+            -e SEED_ROWS=5000 \
+            --entrypoint /bin/bash "$SQL_IMAGE" /database/deploy.sh
+
+      - name: Re-run deployment (must be idempotent)
+        run: |
+          docker run --rm --network host -v "$PWD/database:/database:ro" \
+            -e SQL_SERVER=localhost,1433 -e SQL_PASSWORD="$CI_SA_PASSWORD" -e DB_NAME=PublicServicePortal \
+            -e SQLCMD=/opt/mssql-tools18/bin/sqlcmd -e SQLCMD_EXTRA=-C \
+            --entrypoint /bin/bash "$SQL_IMAGE" /database/deploy.sh
+
+      - name: Database tests (security, workflow, SLA calendar, fees)
+        run: |
+          docker run --rm --network host -v "$PWD/database:/database:ro" \
+            -e SQL_SERVER=localhost,1433 -e SQL_PASSWORD="$CI_SA_PASSWORD" -e DB_NAME=PublicServicePortal \
+            -e SQLCMD=/opt/mssql-tools18/bin/sqlcmd -e SQLCMD_EXTRA=-C \
+            --entrypoint /bin/bash "$SQL_IMAGE" /database/tests/run_tests.sh
+
+      - name: Publish web app
+        run: dotnet publish src/ServicePortal.Web/ServicePortal.Web.csproj -c Release -o publish/web --no-build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-app
+          path: publish/web
+
+  deploy-test:
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    needs: build-test
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy database to Test
+        run: |
+          docker run --rm -v "$PWD/database:/database:ro" \
+            -e SQL_SERVER="${{ secrets.SQL_SERVER }}" -e SQL_USER="${{ secrets.SQL_USER }}" -e SQL_PASSWORD="${{ secrets.SQL_PASSWORD }}" \
+            -e DB_NAME=PublicServicePortal -e SQLCMD=/opt/mssql-tools18/bin/sqlcmd \
+            -e APP_PASSWORD="${{ secrets.APP_PASSWORD }}" -e INTEG_PASSWORD="${{ secrets.INTEG_PASSWORD }}" -e RPT_PASSWORD="${{ secrets.RPT_PASSWORD }}" \
+            --entrypoint /bin/bash "$SQL_IMAGE" /database/deploy.sh
+      # Next step for a real environment: deploy the web-app artifact (IIS Web Deploy, Azure App Service, etc.)
+
+  deploy-prod:
+    needs: deploy-test
+    runs-on: ubuntu-latest
+    environment: production   # required reviewer approves here
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy database to Production
+        run: |
+          docker run --rm -v "$PWD/database:/database:ro" \
+            -e SQL_SERVER="${{ secrets.SQL_SERVER }}" -e SQL_USER="${{ secrets.SQL_USER }}" -e SQL_PASSWORD="${{ secrets.SQL_PASSWORD }}" \
+            -e DB_NAME=PublicServicePortal -e SQLCMD=/opt/mssql-tools18/bin/sqlcmd \
+            -e APP_PASSWORD="${{ secrets.APP_PASSWORD }}" -e INTEG_PASSWORD="${{ secrets.INTEG_PASSWORD }}" -e RPT_PASSWORD="${{ secrets.RPT_PASSWORD }}" \
+            --entrypoint /bin/bash "$SQL_IMAGE" /database/deploy.sh

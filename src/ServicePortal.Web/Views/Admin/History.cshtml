@@ -1,0 +1,15 @@
+@model List<RequestVersionRow>
+@{ ViewData["Title"] = "Change history"; }
+<h1>Change history – request #@ViewBag.RequestId</h1>
+<p class="muted">Read directly from the system-versioned (temporal) table: every version of the row and the period it was current. Times are UTC.</p>
+<table class="table">
+    <thead><tr><th>Valid from</th><th>Valid to</th><th>Status</th><th>Priority</th><th>Crew</th><th class="num">Cost</th><th>ERP document</th></tr></thead>
+    <tbody>
+    @foreach (var v in Model)
+    {
+        <tr><td>@v.ValidFrom.ToString("yyyy-MM-dd HH:mm:ss")</td><td>@(v.ValidTo.Year == 9999 ? "current" : v.ValidTo.ToString("yyyy-MM-dd HH:mm:ss"))</td>
+            <td>@v.StatusCode</td><td>@v.Priority</td><td>@v.AssignedCrewId</td><td class="num">@(v.CostAmount?.ToString("C"))</td><td>@v.ErpDocumentNo</td></tr>
+    }
+    </tbody>
+</table>
+<a asp-controller="Requests" asp-action="Details" asp-route-id="@ViewBag.RequestId">&larr; Back to request</a>

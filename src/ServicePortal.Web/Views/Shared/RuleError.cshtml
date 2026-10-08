@@ -1,0 +1,4 @@
+@{ ViewData["Title"] = "Request not completed"; var message = Model as string ?? ViewData["Message"] as string; }
+<h1>That couldn't be completed</h1>
+<p>@message</p>
+<p><a href="/" class="js-back">Go back</a></p>

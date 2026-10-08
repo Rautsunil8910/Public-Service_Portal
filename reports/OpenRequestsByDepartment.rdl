@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="PublicServicePortal">
+      <ConnectionProperties>
+        <DataProvider>SQL</DataProvider>
+        <ConnectString>Data Source=localhost,1433;Initial Catalog=PublicServicePortal;Encrypt=True;TrustServerCertificate=True</ConnectString>
+        <Prompt>Sign in as portal_reports (read-only rpt_reader role)</Prompt>
+      </ConnectionProperties>
+      <rd:DataSourceID>3f1b0f40-0000-4000-8000-000000000006</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="Data">
+      <Query>
+        <DataSourceName>PublicServicePortal</DataSourceName>
+        <QueryParameters><QueryParameter Name="@MinPriority"><Value>=Parameters!MinPriority.Value</Value></QueryParameter></QueryParameters>
+        <CommandText>SELECT DivisionName, DepartmentName, CategoryName, Priority, OpenRequests, OverdueRequests, OldestBusinessDays
+FROM rpt.vw_OpenRequestsByDepartment
+WHERE (@MinPriority IS NULL OR Priority &lt;= @MinPriority)
+ORDER BY DivisionName, DepartmentName, OverdueRequests DESC</CommandText>
+      </Query>
+      <Fields><Field Name="DivisionName"><DataField>DivisionName</DataField><rd:TypeName>System.String</rd:TypeName></Field><Field Name="DepartmentName"><DataField>DepartmentName</DataField><rd:TypeName>System.String</rd:TypeName></Field><Field Name="CategoryName"><DataField>CategoryName</DataField><rd:TypeName>System.String</rd:TypeName></Field><Field Name="Priority"><DataField>Priority</DataField><rd:TypeName>System.Byte</rd:TypeName></Field><Field Name="OpenRequests"><DataField>OpenRequests</DataField><rd:TypeName>System.Int32</rd:TypeName></Field><Field Name="OverdueRequests"><DataField>OverdueRequests</DataField><rd:TypeName>System.Int32</rd:TypeName></Field><Field Name="OldestBusinessDays"><DataField>OldestBusinessDays</DataField><rd:TypeName>System.Int32</rd:TypeName></Field></Fields>
+    </DataSet>
+  </DataSets>
+  <ReportParameters><ReportParameter Name="MinPriority"><DataType>Integer</DataType><DefaultValue><Values><Value>4</Value></Values></DefaultValue><Prompt>Show priorities up to (1 = urgent only, 4 = all)</Prompt></ReportParameter></ReportParameters>
+  <Body>
+    <ReportItems>
+      <Textbox Name="Title"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+        <Paragraphs>
+          <Paragraph><TextRuns><TextRun><Value>Open Service Requests by Department</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>16pt</FontSize><FontWeight>Bold</FontWeight><Color>#0B5D4B</Color></Style></TextRun></TextRuns><Style /></Paragraph>
+          <Paragraph><TextRuns><TextRun><Value>Snapshot as of the last nightly warehouse load. Source: rpt.vw_OpenRequestsByDepartment</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize><Color>#5B6875</Color></Style></TextRun></TextRuns><Style /></Paragraph>
+        </Paragraphs>
+        <Top>0in</Top><Left>0in</Left><Height>0.6in</Height><Width>9.0in</Width><Style />
+      </Textbox>
+      <Tablix Name="DataTable">
+        <TablixBody>
+          <TablixColumns><TablixColumn><Width>1.8in</Width></TablixColumn><TablixColumn><Width>1.8in</Width></TablixColumn><TablixColumn><Width>1.9in</Width></TablixColumn><TablixColumn><Width>0.7in</Width></TablixColumn><TablixColumn><Width>0.8in</Width></TablixColumn><TablixColumn><Width>0.8in</Width></TablixColumn><TablixColumn><Width>1.2in</Width></TablixColumn></TablixColumns>
+          <TablixRows>
+            <TablixRow><Height>0.3in</Height><TablixCells><TablixCell><CellContents><Textbox Name="h0"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>Division</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize><FontWeight>Bold</FontWeight><Color>White</Color></Style></TextRun></TextRuns><Style /></Paragraph></Paragraphs>
+<rd:DefaultName>h0</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><BackgroundColor>#0B5D4B</BackgroundColor><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell><TablixCell><CellContents><Textbox Name="h1"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>Department</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize><FontWeight>Bold</FontWeight><Color>White</Color></Style></TextRun></TextRuns><Style /></Paragraph></Paragraphs>
+<rd:DefaultName>h1</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><BackgroundColor>#0B5D4B</BackgroundColor><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell><TablixCell><CellContents><Textbox Name="h2"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>Category</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize><FontWeight>Bold</FontWeight><Color>White</Color></Style></TextRun></TextRuns><Style /></Paragraph></Paragraphs>
+<rd:DefaultName>h2</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><BackgroundColor>#0B5D4B</BackgroundColor><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell><TablixCell><CellContents><Textbox Name="h3"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>Priority</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize><FontWeight>Bold</FontWeight><Color>White</Color></Style></TextRun></TextRuns><Style><TextAlign>Right</TextAlign></Style></Paragraph></Paragraphs>
+<rd:DefaultName>h3</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><BackgroundColor>#0B5D4B</BackgroundColor><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell><TablixCell><CellContents><Textbox Name="h4"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>Open</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize><FontWeight>Bold</FontWeight><Color>White</Color></Style></TextRun></TextRuns><Style><TextAlign>Right</TextAlign></Style></Paragraph></Paragraphs>
+<rd:DefaultName>h4</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><BackgroundColor>#0B5D4B</BackgroundColor><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell><TablixCell><CellContents><Textbox Name="h5"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>Overdue</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize><FontWeight>Bold</FontWeight><Color>White</Color></Style></TextRun></TextRuns><Style><TextAlign>Right</TextAlign></Style></Paragraph></Paragraphs>
+<rd:DefaultName>h5</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><BackgroundColor>#0B5D4B</BackgroundColor><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell><TablixCell><CellContents><Textbox Name="h6"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>Oldest (bus. days)</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize><FontWeight>Bold</FontWeight><Color>White</Color></Style></TextRun></TextRuns><Style><TextAlign>Right</TextAlign></Style></Paragraph></Paragraphs>
+<rd:DefaultName>h6</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><BackgroundColor>#0B5D4B</BackgroundColor><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell></TablixCells></TablixRow>
+            <TablixRow><Height>0.25in</Height><TablixCells><TablixCell><CellContents><Textbox Name="d0"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>=Fields!DivisionName.Value</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize></Style></TextRun></TextRuns><Style /></Paragraph></Paragraphs>
+<rd:DefaultName>d0</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell><TablixCell><CellContents><Textbox Name="d1"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>=Fields!DepartmentName.Value</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize></Style></TextRun></TextRuns><Style /></Paragraph></Paragraphs>
+<rd:DefaultName>d1</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell><TablixCell><CellContents><Textbox Name="d2"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>=Fields!CategoryName.Value</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize></Style></TextRun></TextRuns><Style /></Paragraph></Paragraphs>
+<rd:DefaultName>d2</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell><TablixCell><CellContents><Textbox Name="d3"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>=Fields!Priority.Value</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize></Style></TextRun></TextRuns><Style><TextAlign>Right</TextAlign></Style></Paragraph></Paragraphs>
+<rd:DefaultName>d3</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell><TablixCell><CellContents><Textbox Name="d4"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>=Fields!OpenRequests.Value</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize><Format>#,0</Format></Style></TextRun></TextRuns><Style><TextAlign>Right</TextAlign></Style></Paragraph></Paragraphs>
+<rd:DefaultName>d4</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell><TablixCell><CellContents><Textbox Name="d5"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>=Fields!OverdueRequests.Value</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize><Format>#,0</Format><Color>=IIF(Fields!OverdueRequests.Value &gt; 0, "#B3261E", "Black")</Color></Style></TextRun></TextRuns><Style><TextAlign>Right</TextAlign></Style></Paragraph></Paragraphs>
+<rd:DefaultName>d5</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell><TablixCell><CellContents><Textbox Name="d6"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+<Paragraphs><Paragraph><TextRuns><TextRun><Value>=Fields!OldestBusinessDays.Value</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>9pt</FontSize><Format>#,0</Format></Style></TextRun></TextRuns><Style><TextAlign>Right</TextAlign></Style></Paragraph></Paragraphs>
+<rd:DefaultName>d6</rd:DefaultName><Style><Border><Color>#D9DEE4</Color><Style>Solid</Style></Border><PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight><PaddingTop>2pt</PaddingTop><PaddingBottom>2pt</PaddingBottom></Style></Textbox></CellContents></TablixCell></TablixCells></TablixRow>
+          </TablixRows>
+        </TablixBody>
+        <TablixColumnHierarchy><TablixMembers><TablixMember /><TablixMember /><TablixMember /><TablixMember /><TablixMember /><TablixMember /><TablixMember /></TablixMembers></TablixColumnHierarchy>
+        <TablixRowHierarchy>
+          <TablixMembers>
+            <TablixMember><KeepWithGroup>After</KeepWithGroup><RepeatOnNewPage>true</RepeatOnNewPage></TablixMember>
+            <TablixMember><Group Name="Details" /></TablixMember>
+          </TablixMembers>
+        </TablixRowHierarchy>
+        <RepeatColumnHeaders>true</RepeatColumnHeaders>
+        <DataSetName>Data</DataSetName>
+        <NoRowsMessage>No data for the selected parameters (has the nightly warehouse load run?).</NoRowsMessage>
+        <Top>0.75in</Top><Left>0in</Left><Height>0.55in</Height><Width>9.0in</Width>
+        <Style><Border><Style>None</Style></Border></Style>
+      </Tablix>
+    </ReportItems>
+    <Height>1.5in</Height>
+    <Style />
+  </Body>
+  <Width>9.0in</Width>
+  <Page>
+    <PageFooter>
+      <Height>0.3in</Height><PrintOnFirstPage>true</PrintOnFirstPage><PrintOnLastPage>true</PrintOnLastPage>
+      <ReportItems>
+        <Textbox Name="Footer"><CanGrow>true</CanGrow><KeepTogether>true</KeepTogether>
+          <Paragraphs><Paragraph><TextRuns><TextRun><Value>="Page " &amp; Globals!PageNumber &amp; " of " &amp; Globals!TotalPages &amp; "  |  Generated " &amp; Format(Globals!ExecutionTime, "yyyy-MM-dd HH:mm")</Value><Style><FontFamily>Segoe UI</FontFamily><FontSize>8pt</FontSize><Color>#5B6875</Color></Style></TextRun></TextRuns><Style /></Paragraph></Paragraphs>
+          <Top>0.05in</Top><Left>0in</Left><Height>0.2in</Height><Width>9.0in</Width><Style />
+        </Textbox>
+      </ReportItems>
+      <Style />
+    </PageFooter>
+    <PageHeight>8.5in</PageHeight><PageWidth>11in</PageWidth>
+    <LeftMargin>0.5in</LeftMargin><RightMargin>0.5in</RightMargin><TopMargin>0.5in</TopMargin><BottomMargin>0.5in</BottomMargin>
+    <Style />
+  </Page>
+  <Language>en-CA</Language>
+  <rd:ReportUnitType>Inch</rd:ReportUnitType>
+</Report>

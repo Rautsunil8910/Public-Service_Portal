@@ -1,0 +1,9 @@
+@model (int Page, int TotalPages, Func<int, string> Url)
+@if (Model.TotalPages > 1)
+{
+    <nav class="pager" aria-label="Pages">
+        @if (Model.Page > 1) { <a href="@Model.Url(Model.Page - 1)">&larr; Previous</a> }
+        <span>Page @Model.Page of @Model.TotalPages</span>
+        @if (Model.Page < Model.TotalPages) { <a href="@Model.Url(Model.Page + 1)">Next &rarr;</a> }
+    </nav>
+}

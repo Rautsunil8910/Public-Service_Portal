@@ -1,0 +1,25 @@
+@model RegisterModel
+@{ ViewData["Title"] = "Create an account"; }
+<div class="narrow">
+    <h1>Create a resident account</h1>
+    <form asp-action="Register" method="post" class="form">
+        <div asp-validation-summary="All" class="alert alert-error" role="alert"></div>
+        <div class="row">
+            <div><label asp-for="FirstName"></label><input asp-for="FirstName" autocomplete="given-name" /></div>
+            <div><label asp-for="LastName"></label><input asp-for="LastName" autocomplete="family-name" /></div>
+        </div>
+        <label asp-for="Email"></label><input asp-for="Email" autocomplete="email" />
+        <label asp-for="Phone"></label><input asp-for="Phone" autocomplete="tel" />
+        <label asp-for="StreetAddress"></label><input asp-for="StreetAddress" autocomplete="street-address" />
+        <label asp-for="MunicipalityId"></label>
+        <select asp-for="MunicipalityId" asp-items="@(new SelectList(Model.Municipalities, "MunicipalityId", "Name"))">
+            <option value="">Choose…</option>
+        </select>
+        <label asp-for="Password"></label>
+        <input asp-for="Password" autocomplete="new-password" aria-describedby="pwd-help" />
+        <p id="pwd-help" class="hint">At least 10 characters with upper- and lower-case letters and a number.</p>
+        <label asp-for="ConfirmPassword"></label><input asp-for="ConfirmPassword" autocomplete="new-password" />
+        <p class="hint">Your contact details are used only to respond to your requests and are protected under MFIPPA.</p>
+        <button type="submit" class="btn btn-primary">Create account</button>
+    </form>
+</div>

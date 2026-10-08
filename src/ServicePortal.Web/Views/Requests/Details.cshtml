@@ -1,0 +1,146 @@
+@model RequestDetailViewModel
+@{
+    var r = Model.Request;
+    ViewData["Title"] = r.RequestNumber;
+    var isResident = User.IsInRole("RESIDENT");
+    var canCost = !isResident && (User.IsInRole("SUPERVISOR") || User.IsInRole("ADMIN"));
+}
+<div class="page-head">
+    <h1>@r.RequestNumber <span class="@Display.StatusCss(r.StatusCode)">@r.StatusName</span></h1>
+    @if (!isResident) { <a asp-action="Queue">&larr; Back to queue</a> } else { <a asp-action="Mine">&larr; My requests</a> }
+</div>
+
+<div class="grid-2">
+    <section class="panel">
+        <h2>Request</h2>
+        <dl class="facts">
+            <dt>Category</dt><dd>@r.Category</dd>
+            <dt>Responsible department</dt><dd>@r.Department</dd>
+            <dt>Location</dt><dd>@r.LocationText, @r.Municipality</dd>
+            <dt>Description</dt><dd class="prewrap">@r.Description</dd>
+            <dt>Received</dt><dd>@r.SubmittedAtUtc.Local() via @r.Channel.ToLowerInvariant()</dd>
+            <dt>Target date</dt>
+            <dd>@r.DueDate.ToString("dddd, MMMM d, yyyy") @if (r.IsOverdue) { <span class="badge-alert">Overdue</span> }
+                <small class="muted">(@r.BusinessDaysOpen business day(s) @(r.IsTerminal ? "to close" : "so far"))</small></dd>
+            @if (!isResident) { <dt>Priority</dt><dd>@Display.PriorityLabel(r.Priority)</dd> }
+            @if (r.AssignedCrew is not null) { <dt>Assigned to</dt><dd>@r.AssignedCrew</dd> }
+            @if (r.Resolution is not null) { <dt>Resolution</dt><dd>@r.Resolution (@r.ClosedAtUtc.Local())</dd> }
+        </dl>
+    </section>
+
+    @if (!isResident)
+    {
+        <section class="panel">
+            <h2>Resident</h2>
+            @if (r.ResidentId is null)
+            {
+                <p class="muted">Anonymous report – no contact details.</p>
+            }
+            else
+            {
+                <dl class="facts" id="contact-block">
+                    <dt>Name</dt><dd>@r.ResidentName</dd>
+                    <dt>Email</dt><dd data-field="email">@r.ResidentEmail</dd>
+                    <dt>Phone</dt><dd data-field="phone">@r.ResidentPhone</dd>
+                    <dt>Address</dt><dd data-field="address"><span class="muted">hidden</span></dd>
+                </dl>
+                @if (User.CanSee(Screens.ResidentContact))
+                {
+                    <form id="reveal-form" class="form compact" data-resident="@r.ResidentId" data-url="@Url.Action("Contact")">
+                        @Html.AntiForgeryToken()
+                        <label for="purpose">Reason for viewing contact details (logged for privacy audit)</label>
+                        <input id="purpose" name="purpose" minlength="10" maxlength="200" required placeholder="e.g. Calling back to confirm the exact location" />
+                        <button type="submit" class="btn btn-small">Show contact details</button>
+                        <p class="hint" id="reveal-status" aria-live="polite"></p>
+                    </form>
+                }
+                else
+                {
+                    <p class="hint">Contact details are masked. A supervisor can view them with a recorded reason.</p>
+                }
+            }
+
+            @if (r.CostAmount is not null || canCost)
+            {
+                <h2>Cost &amp; Finance</h2>
+                <dl class="facts">
+                    <dt>Work order cost</dt><dd>@(r.CostAmount?.ToString("C") ?? "not recorded")</dd>
+                    @if (r.CostCentre is not null) { <dt>Cost centre</dt><dd>@r.CostCentre</dd> }
+                    <dt>Posted to Finance</dt><dd>@(r.ErpPostedAtUtc is null ? "not yet" : $"{r.ErpPostedAtUtc.Local()} – {r.ErpDocumentNo}")</dd>
+                </dl>
+                @if (canCost && r.ErpPostedAtUtc is null)
+                {
+                    <form asp-action="RecordCost" method="post" class="form compact inline">
+                        <input type="hidden" name="RequestId" value="@r.RequestId" />
+                        <input type="hidden" name="RowVersion" value="@Model.RowVersion" />
+                        <label for="cost">Cost ($)</label>
+                        <input id="cost" name="CostAmount" type="number" min="0" max="1000000" step="0.01" value="@r.CostAmount" required />
+                        <button type="submit" class="btn btn-small">Save cost</button>
+                    </form>
+                }
+            }
+        </section>
+    }
+</div>
+
+@if (Model.Transitions.Count > 0)
+{
+    <section class="panel">
+        <h2>Next step</h2>
+        <form asp-action="Transition" method="post" class="form wide" id="transition-form">
+            <input type="hidden" name="RequestId" value="@r.RequestId" />
+            <input type="hidden" name="RowVersion" value="@Model.RowVersion" />
+            <div class="row">
+                <div>
+                    <label for="ToStatus">Move to</label>
+                    <select id="ToStatus" name="ToStatus" required>
+                        @foreach (var t in Model.Transitions) { <option value="@t.ToStatus">@t.DisplayName</option> }
+                    </select>
+                </div>
+                @if (!isResident)
+                {
+                    <div>
+                        <label for="Priority">Priority</label>
+                        <select id="Priority" name="Priority">
+                            <option value="">Keep @r.Priority</option>
+                            @for (byte p = 1; p <= 4; p++) { <option value="@p">@Display.PriorityLabel(p)</option> }
+                        </select>
+                    </div>
+                }
+            </div>
+            @if (Model.Crews.Count > 0)
+            {
+                <div data-show-for="ASSIGNED">
+                    <label for="CrewId">Crew</label>
+                    <select id="CrewId" name="CrewId">
+                        <option value="">Choose a crew…</option>
+                        @foreach (var c in Model.Crews) { <option value="@c.CrewId">@c.Name (@c.DepartmentName)</option> }
+                    </select>
+                </div>
+            }
+            <div data-show-for="CLOSED">
+                <label for="Resolution">Resolution (shown to the resident)</label>
+                <textarea id="Resolution" name="Resolution" rows="2" maxlength="1000"></textarea>
+            </div>
+            <label for="Note">Internal note</label>
+            <textarea id="Note" name="Note" rows="2" maxlength="1000"></textarea>
+            <button type="submit" class="btn btn-primary">Update request</button>
+        </form>
+    </section>
+}
+
+<section class="panel">
+    <h2>Timeline</h2>
+    <ol class="timeline">
+        @foreach (var e in Model.Events)
+        {
+            <li>
+                <time>@e.ChangedAtUtc.Local()</time>
+                <span class="@Display.StatusCss(e.ToStatus)">@e.ToStatus.Replace('_', ' ')</span>
+                @if (!isResident) { <span class="muted">by @e.ChangedBy</span> }
+                @if (!string.IsNullOrEmpty(e.Note) && !isResident) { <div class="note">@e.Note</div> }
+            </li>
+        }
+    </ol>
+    @if (User.CanSee(Screens.AdminAudit)) { <a asp-controller="Admin" asp-action="History" asp-route-id="@r.RequestId">View full change history (temporal table)</a> }
+</section>

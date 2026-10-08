@@ -1,0 +1,20 @@
+@model List<ErrorRow>
+@{ ViewData["Title"] = "Error log"; }
+<h1>Application error log</h1>
+<p class="muted">Users are shown the reference in the right-hand column; search for it here when they call.</p>
+<table class="table">
+    <thead><tr><th>When</th><th>Source</th><th>Message</th><th>User</th><th>Reference</th></tr></thead>
+    <tbody>
+    @foreach (var e in Model)
+    {
+        <tr>
+            <td>@e.LoggedAtUtc.Local()</td><td>@e.Source</td>
+            <td>@e.Message
+                @if (!string.IsNullOrEmpty(e.Detail)) { <details><summary>Details</summary><pre>@e.Detail</pre></details> }
+            </td>
+            <td>@e.UserName</td><td><code>@e.CorrelationId</code></td>
+        </tr>
+    }
+    </tbody>
+</table>
+@if (Model.Count == 0) { <p class="empty">No errors logged.</p> }

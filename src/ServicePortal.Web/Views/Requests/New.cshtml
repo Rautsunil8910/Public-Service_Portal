@@ -1,0 +1,73 @@
+@model NewRequestModel
+@{
+    ViewData["Title"] = "Report a problem";
+    var isStaff = !User.IsInRole("RESIDENT");
+}
+<h1>Report a problem</h1>
+<form asp-action="New" method="post" class="form wide">
+    <div asp-validation-summary="All" class="alert alert-error" role="alert"></div>
+
+    @if (isStaff)
+    {
+        <fieldset>
+            <legend>Caller (phone or counter intake)</legend>
+            <div class="row">
+                <div>
+                    <label asp-for="Channel">Received by</label>
+                    <select asp-for="Channel">
+                        <option value="PHONE">Phone</option>
+                        <option value="COUNTER">Counter</option>
+                        <option value="EMAIL">Email</option>
+                    </select>
+                </div>
+                <div>
+                    <label asp-for="Priority">Priority</label>
+                    <select asp-for="Priority">
+                        <option value="">Category default</option>
+                        <option value="1">1 – Urgent (safety hazard)</option>
+                        <option value="2">2 – High</option>
+                        <option value="3">3 – Normal</option>
+                        <option value="4">4 – Low</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div><label asp-for="CallerFirstName"></label><input asp-for="CallerFirstName" /></div>
+                <div><label asp-for="CallerLastName"></label><input asp-for="CallerLastName" /></div>
+            </div>
+            <div class="row">
+                <div><label asp-for="CallerEmail"></label><input asp-for="CallerEmail" /></div>
+                <div><label asp-for="CallerPhone"></label><input asp-for="CallerPhone" /></div>
+            </div>
+            <p class="hint">Leave caller details blank for anonymous reports. An existing resident is matched by email.</p>
+        </fieldset>
+    }
+
+    <label asp-for="CategoryId"></label>
+    <select asp-for="CategoryId" id="category">
+        <option value="">Choose a category…</option>
+        @foreach (var c in Model.Categories)
+        {
+            <option value="@c.CategoryId" data-sla="@c.SlaBusinessDays" selected="@(Model.CategoryId == c.CategoryId)">@c.PathName</option>
+        }
+    </select>
+    <p class="hint" id="sla-hint" aria-live="polite"></p>
+
+    <label asp-for="MunicipalityId"></label>
+    <select asp-for="MunicipalityId" asp-items="@(new SelectList(Model.Municipalities, "MunicipalityId", "Name"))">
+        <option value="">Choose…</option>
+    </select>
+
+    <label asp-for="LocationText"></label>
+    <input asp-for="LocationText" placeholder="e.g. County Rd 90 at Line 4, eastbound lane" />
+    <button type="button" class="btn btn-small" id="use-location">Use my current location</button>
+    <input type="hidden" asp-for="Latitude" id="lat" />
+    <input type="hidden" asp-for="Longitude" id="lng" />
+    <p class="hint" id="geo-status" aria-live="polite"></p>
+
+    <label asp-for="Description"></label>
+    <textarea asp-for="Description" rows="5" maxlength="2000" data-counter="desc-count"></textarea>
+    <p class="hint"><span id="desc-count">0</span> / 2000 characters</p>
+
+    <button type="submit" class="btn btn-primary">Submit request</button>
+</form>

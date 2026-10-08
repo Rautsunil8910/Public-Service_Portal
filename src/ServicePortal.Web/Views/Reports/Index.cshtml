@@ -1,0 +1,50 @@
+@model ReportsViewModel
+@{ ViewData["Title"] = "Reports"; }
+<h1>Reports</h1>
+<p class="muted">Reports read the reporting warehouse, refreshed nightly at 2:00 a.m. Supervisors see their own area only. The same data is available as SSRS paginated reports for scheduled distribution.</p>
+
+<section class="panel">
+    <h2>SLA compliance by month</h2>
+    <form method="get" class="filters">
+        <label>From <input type="date" name="from" value="@Model.From.ToString("yyyy-MM-dd")" /></label>
+        <label>To <input type="date" name="to" value="@Model.To.ToString("yyyy-MM-dd")" /></label>
+        <button class="btn" type="submit">Show</button>
+        <a class="btn" asp-action="ExportSla" asp-route-from="@Model.From.ToString("yyyy-MM-dd")" asp-route-to="@Model.To.ToString("yyyy-MM-dd")">Export to Excel</a>
+    </form>
+    @if (Model.Sla.Count == 0)
+    {
+        <p class="empty">No closed requests in this period (or the warehouse has not been loaded yet).</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead><tr><th>Month</th><th>Department</th><th class="num">Closed</th><th class="num">On time</th><th class="num">On-time %</th><th class="num">Avg business days</th><th class="sr-only">Chart</th></tr></thead>
+            <tbody>
+            @foreach (var row in Model.Sla)
+            {
+                <tr>
+                    <td>@row.YearMonth</td><td>@row.DepartmentName</td>
+                    <td class="num">@row.ClosedRequests.ToString("N0")</td><td class="num">@row.MetSla.ToString("N0")</td>
+                    <td class="num @(row.SlaPct < 80 ? "text-alert" : "")">@row.SlaPct.ToString("0.0")</td>
+                    <td class="num">@row.AvgBusinessDays.ToString("0.0")</td>
+                    <td><meter min="0" max="100" low="80" high="90" optimum="100" value="@row.SlaPct">@row.SlaPct%</meter></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>
+
+<section class="panel">
+    <h2>Other exports</h2>
+    <ul>
+        <li><a asp-action="ExportOpen">Open requests by department and category (live)</a></li>
+        <li>
+            <form method="get" asp-action="ExportPermits" class="inline">
+                Permit revenue by quarter for
+                <input type="number" name="year" value="@Model.Year" min="2020" max="2035" class="input-year" />
+                <button class="btn btn-small" type="submit">Export</button>
+            </form>
+        </li>
+    </ul>
+</section>

@@ -1,0 +1,34 @@
+@model NewPermitModel
+@{ ViewData["Title"] = "Apply for a permit"; }
+<h1>Apply for a building permit</h1>
+<form asp-action="New" method="post" class="form wide" id="permit-form" data-fee-url="@Url.Action("Fee")">
+    <div asp-validation-summary="All" class="alert alert-error" role="alert"></div>
+    <label asp-for="PermitTypeCode"></label>
+    <select asp-for="PermitTypeCode" id="permit-type">
+        <option value="">Choose…</option>
+        @foreach (var t in Model.PermitTypes) { <option value="@t.PermitTypeCode">@t.DisplayName</option> }
+    </select>
+    <label asp-for="PropertyAddress"></label>
+    <input asp-for="PropertyAddress" />
+    <label asp-for="WorkDescription"></label>
+    <textarea asp-for="WorkDescription" rows="4"></textarea>
+    <label asp-for="ProjectValue"></label>
+    <input asp-for="ProjectValue" id="project-value" type="number" min="0" step="1000" />
+    <div class="fee-box" aria-live="polite">
+        <span class="muted">Estimated fee</span>
+        <strong id="fee-amount">–</strong>
+        <small id="fee-breakdown" class="muted"></small>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit application</button>
+</form>
+<h2>Fee schedule</h2>
+<table class="table">
+    <thead><tr><th>Permit</th><th class="num">Base</th><th class="num">Per $1,000 of value</th><th class="num">Minimum</th><th class="num">Maximum</th></tr></thead>
+    <tbody>
+    @foreach (var t in Model.PermitTypes)
+    {
+        <tr><td>@t.DisplayName</td><td class="num">@t.BaseFee.ToString("C")</td><td class="num">@t.RatePerThousand.ToString("C")</td><td class="num">@t.MinFee.ToString("C")</td><td class="num">@(t.MaxFee?.ToString("C") ?? "–")</td></tr>
+    }
+    </tbody>
+</table>
+<p class="hint">Illustrative fee schedule for this demo – not any real municipality's fees.</p>

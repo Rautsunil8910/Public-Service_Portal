@@ -1,0 +1,17 @@
+@{ ViewData["Title"] = "Welcome"; }
+<section class="hero">
+    <h1>Report a problem. Apply for a permit. Track it to done.</h1>
+    <p>Potholes, signal outages, missed collection, by-law concerns and building permits, in one place, with a clear target date for every request.</p>
+    @if (User.Identity?.IsAuthenticated != true)
+    {
+        <p class="actions">
+            <a class="btn btn-primary" asp-controller="Account" asp-action="Register">Create a resident account</a>
+            <a class="btn" asp-controller="Account" asp-action="Login">Sign in</a>
+        </p>
+    }
+</section>
+<section class="cards">
+    <article class="card"><h2>Service requests</h2><p>Each category has a service standard in business days. Requests are routed to the responsible department automatically.</p></article>
+    <article class="card"><h2>Permits</h2><p>See your fee before you apply. Fees follow the published schedule and are calculated on the server.</p></article>
+    <article class="card"><h2>Privacy</h2><p>Your contact details are masked from staff by default. Every time someone views them, the access and its reason are logged.</p></article>
+</section>

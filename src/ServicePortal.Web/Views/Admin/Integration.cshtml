@@ -1,0 +1,35 @@
+@model IntegrationViewModel
+@{ ViewData["Title"] = "ERP integration"; }
+<h1>Finance (ERP) integration</h1>
+<p class="muted">Closed work orders with a cost are posted to Finance as XML by a background job. Failed posts retry automatically up to 5 times; after that they wait here for review.</p>
+<section class="kpis">
+    <div class="kpi"><span class="kpi-value">@(Model.Summary.Pending ?? 0)</span><span class="kpi-label">Waiting to post</span></div>
+    <div class="kpi kpi-alert"><span class="kpi-value">@(Model.Summary.FailedPermanently ?? 0)</span><span class="kpi-label">Needs attention</span></div>
+    <div class="kpi"><span class="kpi-value">@(Model.Summary.PostedLast24h ?? 0)</span><span class="kpi-label">Posted, last 24 h</span></div>
+</section>
+<table class="table">
+    <thead><tr><th>When</th><th>Request</th><th>Attempt</th><th>Result</th><th class="num">ms</th><th>Messages</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var l in Model.Log)
+    {
+        <tr class="@(l.Succeeded ? "" : "row-overdue")">
+            <td>@l.LoggedAtUtc.Local()</td>
+            <td><a asp-controller="Requests" asp-action="Details" asp-route-id="@l.RequestId">@l.RequestNumber</a></td>
+            <td>@l.AttemptNo</td>
+            <td>@(l.Succeeded ? "Posted" : l.ErrorMessage)</td>
+            <td class="num">@l.DurationMs</td>
+            <td><details><summary>XML</summary><pre>@l.RequestXml</pre><pre>@l.ResponseXml</pre></details></td>
+            <td>
+                @if (!l.Succeeded && l.AttemptNo >= 5)
+                {
+                    <form asp-action="Retry" method="post" class="inline">
+                        <input type="hidden" name="requestId" value="@l.RequestId" />
+                        <button class="btn btn-small" type="submit">Retry</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+@if (Model.Log.Count == 0) { <p class="empty">No integration activity yet.</p> }

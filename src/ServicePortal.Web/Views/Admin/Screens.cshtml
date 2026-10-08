@@ -1,0 +1,32 @@
+@model List<RoleScreenCell>
+@{
+    ViewData["Title"] = "Screen permissions";
+    var roles = Model.Select(c => (c.RoleCode, c.RoleName)).Distinct().ToList();
+    var screens = Model.GroupBy(c => (c.ScreenCode, c.ScreenName)).ToList();
+}
+<h1>Screen permissions by role</h1>
+<p class="muted">Changes are stored in <code>sec.RoleScreen</code>, take effect at each user's next sign-in, and are enforced by both the web application and the database procedures.</p>
+<table class="table matrix">
+    <thead><tr><th>Screen</th>@foreach (var r in roles) { <th>@r.RoleName</th> }</tr></thead>
+    <tbody>
+    @foreach (var s in screens)
+    {
+        <tr>
+            <td>@s.Key.ScreenName<br /><small class="muted">@s.Key.ScreenCode</small></td>
+            @foreach (var r in roles)
+            {
+                var cell = s.First(c => c.RoleCode == r.RoleCode);
+                <td>
+                    <form asp-action="SetScreen" method="post">
+                        <input type="hidden" name="roleCode" value="@cell.RoleCode" />
+                        <input type="hidden" name="screenCode" value="@cell.ScreenCode" />
+                        <input type="hidden" name="granted" value="@(cell.Granted ? "false" : "true")" />
+                        <button type="submit" class="toggle @(cell.Granted ? "on" : "off")"
+                                aria-label="@(cell.Granted ? "Remove" : "Grant") @s.Key.ScreenName for @r.RoleName">@(cell.Granted ? "✓" : "–")</button>
+                    </form>
+                </td>
+            }
+        </tr>
+    }
+    </tbody>
+</table>
